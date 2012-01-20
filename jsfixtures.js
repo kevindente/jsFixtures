@@ -96,7 +96,7 @@ jsFixtures.prototype.loadFixtureIntoCache_ = function(relativeUrl) {
       self.fixturesCache_[relativeUrl] = data;
     },
     error: function(jqXHR, status, errorThrown) {
-        throw Error('Fixture could not be loaded: ' + url + ' (status: ' + status + ', message: ' + errorThrown.message + ')');
+        throw new Error('Fixture could not be loaded: ' + url + ' (status: ' + status + ', message: ' + (errorThrown ? errorThrown.message : "") + ')');
     }
   });
 };

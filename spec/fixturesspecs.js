@@ -139,7 +139,8 @@ describe("jsFixtures.Fixtures", function() {
         ajaxData = "<div><a id=\"anchor_01\"></a><script>$(function(){ $('#anchor_01').addClass('foo')});</script></div>";
       });
 
-      //Note - test currently fails with 
+      //This test current fails with Zepto.js, because it doesn't support deferreds (the embedded 
+      //ready handler isn't called when the fixture is added to the DOM, as with jQuery)
       it("should execute the inline javascript after the fixture has been inserted into the body", function(){
         ajaxStub.yieldsTo("success", ajaxData);
         jsFixtures.getFixtures().load(fixtureUrl);
@@ -294,6 +295,8 @@ describe("jsFixtures.Fixtures using real AJAX call", function() {
   describe("when fixture file does not exist", function() {
     var fixtureUrl = "not_existing_fixture";
 
+    //This test fails with Zepto.js - it appears Zepto doesn't propogate the exception
+    //thrown in the 
     it("should throw an exception", function() {
       expect(function() {
         jsFixtures.getFixtures().read(fixtureUrl);
