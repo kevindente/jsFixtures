@@ -1,4 +1,4 @@
-jsfixtures allows you to load HTML content to be used by your tests. It's a straight port of the fixtures portion of
+jsFixtures allows you to load HTML content to be used by your tests. It's a straight port of the fixtures portion of
 the jasmine-jquery project (even the bulk of this readme comes directly from that project). All the credit belongs
 to the creators of jasmine-jquery, I've just repackaged it into a more convenient form.
 

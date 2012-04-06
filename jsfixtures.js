@@ -39,18 +39,54 @@ jsFixtures.prototype.preload = function() {
 
 jsFixtures.prototype.load = function() {
   this.cleanUp();
-  this.createContainer_(this.read.apply(this, arguments));
+  var args, cb;
+
+  if (typeof(arguments[arguments.length - 1]) === 'function') {
+    cb = arguments[arguments.length - 1];
+    args = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
+  }
+  else {
+    args = Array.prototype.slice.call(arguments);
+  }
+
+  var This = this;
+  args.push(function (data) {
+    This.createContainer_(data);
+
+    if (cb) cb(data);
+  });
+
+  this.read.apply(this, args);
 };
 
 jsFixtures.prototype.read = function() {
   var htmlChunks = [];
-
+  var asyncRead = false;
   var fixtureUrls = arguments;
-  for(var urlCount = fixtureUrls.length, urlIndex = 0; urlIndex < urlCount; urlIndex++) {
-    htmlChunks.push(this.getFixtureHtml_(fixtureUrls[urlIndex]));
+  var cb;
+  var fetched = 0;
+  var urlCount;
+  var result;
+  if (typeof(arguments[arguments.length - 1]) === 'function') {
+    asyncRead = true;
+    cb = arguments[arguments.length - 1];
+    fixtureUrls = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
   }
 
-  return htmlChunks.join('');
+  urlCount = fixtureUrls.length;
+  var fetchDone = function(data) {
+    htmlChunks.push(data);
+    if (++fetched == urlCount) {
+      result = htmlChunks.join('')
+      if (cb) return cb(result);
+    }
+  }
+
+  for(var urlIndex = 0; urlIndex < urlCount; urlIndex++) {
+    this.getFixtureHtml_(fixtureUrls[urlIndex], fetchDone, asyncRead);
+  }
+
+  return result;
 };
 
 jsFixtures.prototype.clearCache = function() {
@@ -77,23 +113,26 @@ jsFixtures.prototype.createContainer_ = function(html) {
   $('body').append(container);
 };
 
-jsFixtures.prototype.getFixtureHtml_ = function(url) {  
+jsFixtures.prototype.getFixtureHtml_ = function(url, cb, asyncRead) {  
   if (typeof this.fixturesCache_[url] == 'undefined') {
-    this.loadFixtureIntoCache_(url);
+    this.loadFixtureIntoCache_(url, cb, asyncRead);
+  } else {
+    cb(this.fixturesCache_[url]);
   }
-  return this.fixturesCache_[url];
 };
 
-jsFixtures.prototype.loadFixtureIntoCache_ = function(relativeUrl) {
+jsFixtures.prototype.loadFixtureIntoCache_ = function(relativeUrl, cb, asyncRead) {
   var self = this;
   var url = this.fixturesPath.match('/$') ? this.fixturesPath + relativeUrl : this.fixturesPath + '/' + relativeUrl;
+
   $.ajax({
-    async: false, // must be synchronous to guarantee that no tests are run before fixture is loaded
+    async: asyncRead,
     cache: false,
     dataType: 'html',
     url: url,
     success: function(data) {
       self.fixturesCache_[relativeUrl] = data;
+      cb(data);
     },
     error: function(jqXHR, status, errorThrown) {
         throw new Error('Fixture could not be loaded: ' + url + ' (status: ' + status + ', message: ' + (errorThrown ? errorThrown.message : "") + ')');
@@ -105,8 +144,12 @@ jsFixtures.prototype.proxyCallTo_ = function(methodName, passedArguments) {
   return this[methodName].apply(this, passedArguments);
 };
 
-if (afterEach) {
+if (typeof(afterEach) !== "undefined") {
   afterEach(function() {
     jsFixtures.getFixtures().cleanUp();
   });
+}
+
+if (typeof exports !== "undefined") {
+  module.exports = jsFixtures;
 }

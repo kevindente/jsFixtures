@@ -2,9 +2,9 @@
   "author": "Kevin Dente",
   "name": "jsfixtures",
   "description": "Test fixtures for Javascript",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
-    "url": ""
+    "url": "http://github.com/kevindente/jsFixtures"
   },
   "main": "jsfixtures.js"
 }

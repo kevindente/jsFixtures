@@ -93,6 +93,36 @@ describe("jsFixtures.Fixtures", function() {
       readFixtures(fixtureUrl);
       expect($.ajax.lastCall.args[0].url).to.equal('a path without an ending slash/'+fixtureUrl);
     });
+
+    describe("Asynchronous read", function() {
+      beforeEach(function() {
+        $.ajax.restore();
+
+        ajaxStub = sinon.stub($, 'ajax', function(arg) {
+          setTimeout(function() {
+            arg.success(ajaxData);
+          }, 100);
+        });
+      });
+      
+      it("should read 1 fixture asynchronously when a callback is provided ", function(done) {
+        readFixtures(fixtureUrl, function(data) {
+          expect(data).to.equal(ajaxData);
+          done();
+        });
+      });
+
+      it("should read multiple fixtures asynchronously when a callback is provided ", function(done) {
+        var html = jsFixtures.getFixtures().read(fixtureUrl, anotherFixtureUrl);
+        readFixtures(fixtureUrl, anotherFixtureUrl, function(data) {
+          expect(data).to.equal(ajaxData + ajaxData);
+          done();
+        });
+      });
+      
+    });
+    
+    
   });
 
   describe("load", function() {
@@ -135,6 +165,7 @@ describe("jsFixtures.Fixtures", function() {
     });
 
     describe("when fixture contains an inline script tag", function(){
+      var ajaxData;
       beforeEach(function(){
         ajaxData = "<div><a id=\"anchor_01\"></a><script>$(function(){ $('#anchor_01').addClass('foo')});</script></div>";
       });
@@ -146,6 +177,36 @@ describe("jsFixtures.Fixtures", function() {
         jsFixtures.getFixtures().load(fixtureUrl);
         expect($("#anchor_01").hasClass('foo')).to.equal(true);
       });
+    });
+
+    describe("Asynchronous load", function() {
+      beforeEach(function() {
+        $.ajax.restore();
+
+        ajaxStub = sinon.stub($, 'ajax', function(arg) {
+          setTimeout(function() {
+            arg.success(ajaxData);
+          }, 100);
+        });
+      });
+      
+      it("should load 1 fixture asynchronously when a callback is provided ", function(done) {
+        jsFixtures.getFixtures().load(fixtureUrl, function(data) {
+          expect(data).to.equal(ajaxData);
+          expect(fixturesContainer().html()).to.equal(ajaxData);
+          done();
+        });
+      });
+
+      it("should load multiple fixtures asynchronously when a callback is provided ", function(done) {
+        var html = jsFixtures.getFixtures().read(fixtureUrl, anotherFixtureUrl);
+        jsFixtures.getFixtures().load(fixtureUrl, anotherFixtureUrl, function(data) {
+          expect(data).to.equal(ajaxData + ajaxData);
+          expect(fixturesContainer().html()).to.equal(ajaxData + ajaxData);
+          done();
+        });
+      });
+      
     });
   });
 
